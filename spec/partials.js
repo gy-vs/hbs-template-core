@@ -674,4 +674,32 @@ describe('partials', function () {
         );
     });
   });
+
+  describe('strict+compat mode', function () {
+    it('partials can access parents', function () {
+      expectTemplate('Dudes: {{#dudes}}{{> dude}}{{/dudes}}')
+        .withInput({
+          root: 'yes',
+          dudes: [
+            { name: 'Yehuda', url: 'http://yehuda' },
+            { name: 'Alan', url: 'http://alan' },
+          ],
+        })
+        .withPartials({ dude: '{{name}} ({{url}}) {{root}} ' })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo(
+          'Dudes: Yehuda (http://yehuda) yes Alan (http://alan) yes '
+        );
+    });
+
+    it('partials inherit strict+compat and throw on missing variables', function () {
+      expectTemplate('Dudes: {{#dudes}}{{> dude}}{{/dudes}}')
+        .withInput({
+          dudes: [{ name: 'Yehuda', url: 'http://yehuda' }],
+        })
+        .withPartials({ dude: '{{name}} ({{url}}) {{root}} ' })
+        .withCompileOptions({ strict: true, compat: true })
+        .toThrow(Handlebars.Exception, /"root" not defined in/);
+    });
+  });
 });

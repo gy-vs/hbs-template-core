@@ -182,6 +182,37 @@ describe('security issues', function () {
         checkProtoMethodAccess({ compat: true });
       });
 
+      describe('in strict+compat mode', function () {
+        it('should deny access to prototype methods by default', function () {
+          expectTemplate('{{aMethod}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .toCompileTo('');
+        });
+
+        it('can be allowed explicitly', function () {
+          expectTemplate('{{aMethod}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .withRuntimeOptions({
+              allowedProtoMethods: {
+                aMethod: true,
+              },
+            })
+            .toCompileTo('returnValue');
+        });
+
+        it('can be allowed by default', function () {
+          expectTemplate('{{aMethod}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .withRuntimeOptions({
+              allowProtoMethodsByDefault: true,
+            })
+            .toCompileTo('returnValue');
+        });
+      });
+
       function checkProtoMethodAccess(compileOptions) {
         it('should be prohibited by default and log a warning', function () {
           var spy = vi
@@ -313,6 +344,37 @@ describe('security issues', function () {
 
       describe('in strict-mode', function () {
         checkProtoPropertyAccess({ strict: true });
+      });
+
+      describe('in strict+compat mode', function () {
+        it('should be prohibited by default', function () {
+          expectTemplate('{{aProperty}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .toCompileTo('');
+        });
+
+        it('can be turned on explicitly', function () {
+          expectTemplate('{{aProperty}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .withRuntimeOptions({
+              allowedProtoProperties: {
+                aProperty: true,
+              },
+            })
+            .toCompileTo('propertyValue');
+        });
+
+        it('can be turned on by default', function () {
+          expectTemplate('{{aProperty}}')
+            .withInput(new TestClass())
+            .withCompileOptions({ strict: true, compat: true })
+            .withRuntimeOptions({
+              allowProtoPropertiesByDefault: true,
+            })
+            .toCompileTo('propertyValue');
+        });
       });
 
       function checkProtoPropertyAccess(compileOptions) {

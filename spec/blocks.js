@@ -293,6 +293,57 @@ describe('blocks', function () {
     });
   });
 
+  describe('strict+compat mode', function () {
+    it('resolves the block value and outer variables', function () {
+      expectTemplate('{{#foo}}Hello {{bar}}{{/foo}}')
+        .withInput({ foo: true, bar: 'World' })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Hello World');
+    });
+
+    it('block with deep recursive lookup', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg}}{{/inner}}{{/outer}}'
+      )
+        .withInput({
+          omg: 'OMG!',
+          outer: [{ inner: [{ text: 'goodbye' }] }],
+        })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Goodbye cruel OMG!');
+    });
+
+    it('block with deep recursive pathed lookup', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg.yes}}{{/inner}}{{/outer}}'
+      )
+        .withInput({
+          omg: { yes: 'OMG!' },
+          outer: [{ inner: [{ yes: 'no', text: 'goodbye' }] }],
+        })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Goodbye cruel OMG!');
+    });
+
+    it('throws a Handlebars exception on a fully missed lookup', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg}}{{/inner}}{{/outer}}'
+      )
+        .withInput({
+          outer: [{ inner: [{ text: 'goodbye' }] }],
+        })
+        .withCompileOptions({ strict: true, compat: true })
+        .toThrow(Handlebars.Exception, /"omg" not defined in/);
+    });
+
+    it('falls back to outer variables over primitive contexts', function () {
+      expectTemplate('{{#aString}}{{trim}}{{/aString}}')
+        .withInput({ aString: '  abc  ', trim: 'trim' })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('trim');
+    });
+  });
+
   describe('decorators', function () {
     it('should apply mustache decorators', function () {
       expectTemplate('{{#helper}}{{*decorator}}{{/helper}}')
