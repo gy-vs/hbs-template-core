@@ -291,6 +291,46 @@ describe('blocks', function () {
         .withCompileOptions({ compat: true })
         .toCompileTo('Goodbye cruel ');
     });
+
+    it('block with deep recursive lookup in strict mode', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg}}{{/inner}}{{/outer}}'
+      )
+        .withInput({ omg: 'OMG!', outer: [{ inner: [{ text: 'goodbye' }] }] })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Goodbye cruel OMG!');
+    });
+
+    it('block with deep recursive pathed lookup in strict mode', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg.yes}}{{/inner}}{{/outer}}'
+      )
+        .withInput({
+          omg: { yes: 'OMG!' },
+          outer: [{ inner: [{ yes: 'no', text: 'goodbye' }] }],
+        })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Goodbye cruel OMG!');
+    });
+
+    it('block with missed recursive lookup throws in strict mode', function () {
+      expectTemplate(
+        '{{#outer}}Goodbye {{#inner}}cruel {{omg.yes}}{{/inner}}{{/outer}}'
+      )
+        .withInput({
+          omg: { no: 'OMG!' },
+          outer: [{ inner: [{ yes: 'no', text: 'goodbye' }] }],
+        })
+        .withCompileOptions({ strict: true, compat: true })
+        .toThrow(Handlebars.Exception, /"yes" not defined in/);
+    });
+
+    it('block with a primitive value resolves outer values in strict mode', function () {
+      expectTemplate('{{#foo}}Hello {{bar}}{{/foo}}')
+        .withInput({ foo: true, bar: 'World' })
+        .withCompileOptions({ strict: true, compat: true })
+        .toCompileTo('Hello World');
+    });
   });
 
   describe('decorators', function () {
